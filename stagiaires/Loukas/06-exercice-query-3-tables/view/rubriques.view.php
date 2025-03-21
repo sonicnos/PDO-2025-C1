@@ -19,7 +19,7 @@
         foreach ($allArticles as $article): ?>
             <h2><?= $article['title']; ?></h2>
             <p><?= $article['text']; ?></p>
-            <?php var_dump($allArticles) ?>
+
         <?php endforeach;
     else: ?>
 
