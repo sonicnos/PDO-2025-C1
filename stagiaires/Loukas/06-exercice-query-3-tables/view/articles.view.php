@@ -15,10 +15,20 @@
     ?>
     <h1>Nos 30 derniers articles</h1>
     <p>Par date desc</p>
-    <?php foreach ($allArticles as $article) {
-        echo $article["title"] . "<br>";
-        echo $article["text"] . "<br><br>";
-    } ?>
+    <?php
+    if (!isset($error)):
+        foreach ($allArticles as $article):
+    ?>
+            <h2><?= $article["title"] . "<br>"; ?></h2>
+            <p><?= $article["text"] . "<br>"; ?></p>
+
+        <?php endforeach;
+    else:
+        ?>
+
+        <h3><?= $error ?></h3>
+
+    <?php endif; ?>
 
 
 

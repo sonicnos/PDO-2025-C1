@@ -14,8 +14,17 @@
     include "inc/menu.inc.view.php";
     ?>
     <h1>Toutes les champs de toutes les rubriques</h1>
-    <?php var_dump($allArticles) ?>
+    <?php
+    if (!isset($error)):
+        foreach ($allArticles as $article): ?>
+            <h2><?= $article['title']; ?></h2>
+            <p><?= $article['text']; ?></p>
+            <?php var_dump($allArticles) ?>
+        <?php endforeach;
+    else: ?>
 
+        <h3><?= $error ?></h3>
+    <?php endif; ?>
 </body>
 
 </html>

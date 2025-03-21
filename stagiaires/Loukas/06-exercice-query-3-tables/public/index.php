@@ -30,21 +30,38 @@ if (isset($_GET["page"])) {
     switch ($_GET["page"]) {
         case "articles":
             $articlesDbSortDate = $db->query("SELECT * FROM article ORDER BY `article_date_create` DESC LIMIT 30");
-            $allArticles = $articlesDbSortDate->fetchAll(PDO::FETCH_ASSOC);
-            $articlesDbSortDate->closeCursor();
+            $numReqArtc = $articlesDbSortDate->rowCount();
+            if ($numReqArtc > 0) {
+
+                $allArticles = $articlesDbSortDate->fetchAll(PDO::FETCH_ASSOC);
+                $articlesDbSortDate->closeCursor();
+            } else {
+                $error = "Pas d'article";
+            }
             include "../view/articles.view.php";
             break;
         case "users":
             $allUsersDb = $db->query("SELECT * FROM user ORDER BY username ASC");
-            $allUsers = $allUsersDb->fetchAll(PDO::FETCH_ASSOC);
-            $allUsersDb->closeCursor();
+            $numReqUser = $allUsersDb->rowCount();
+            if ($numReqUser > 0) {
+                $allUsers = $allUsersDb->fetchAll(PDO::FETCH_ASSOC);
+                $allUsersDb->closeCursor();
+            } else {
+                $error = "Pas d'utilisateur";
+            }
             include "../view/users.view.php";
             break;
         case "rubriques":
             // ici nos requêtes SQL
             $articlesDb = $db->query("SELECT * FROM article");
-            $allArticles = $articlesDb->fetchAll(PDO::FETCH_ASSOC);
-            $articlesDb->closeCursor();
+            $numReqArtDb = $articlesDb->rowCount();
+            if ($numReqArtDb > 0) {
+
+                $allArticles = $articlesDb->fetchAll(PDO::FETCH_ASSOC);
+                $articlesDb->closeCursor();
+            } else {
+                $error = "Pas d'article";
+            }
             // fermeture de la requête
             // appel de la vue des rubriques
             include "../view/rubriques.view.php";
@@ -59,6 +76,7 @@ if (isset($_GET["page"])) {
     // appel de la vue de l'accueil
     include "../view/accueil.view.php";
 }
+
 
 
 // fermeture de connexion
