@@ -15,9 +15,11 @@
     ?>
     <h1>Les utilisateurs</h1>
     <p>Par ordre username ascendant, que le username et fullname</p>
-    <?php foreach ($allUsers as $user) {
-        echo $user["fullname"] . "<br>";
-    } ?>
+    <p>
+        <?php foreach ($allUsers as $user) {
+            echo $user["username"] . ":" . $user["fullname"] . "<br>";
+        } ?>
+    </p>
     <?php var_dump($allUsers); ?>
 </body>
 
