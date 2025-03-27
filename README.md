@@ -31,7 +31,15 @@ Connexion PDO - PHP / MySQL, MariaDB, etc ...
   - [Méthode `fetchAll`](#méthode-fetchall) 
     - [Documentation sur `fetchAll`](#documentation-sur-fetchall)
 - [PDO : Les requêtes préparées](#pdo--les-requêtes-préparées)
- 
+  - [Méthode `prepare`](#méthode-prepare)
+    - [Documentation sur `prepare`](#documentation-sur-prepare)
+  - [Méthode `bindParam`](#méthode-bindparam)
+    - [Documentation sur `bindParam`](#documentation-sur-bindparam)
+  - [Méthode `bindValue`](#méthode-bindvalue)
+    - [Documentation sur `bindValue`](#documentation-sur-bindvalue)
+  - [Différence Clé entre `bindParam` et `bindValue`](#différence-clé-entre-bindparam-et-bindvalue)
+  - [Méthode `execute`](#méthode-execute)
+    - [Documentation sur `execute`](#documentation-sur-execute)
 
 
 ## PDO : Présentation
@@ -828,34 +836,300 @@ On peut attribuer des valeurs aux marqueurs en utilisant la méthode `bindValue`
 
 La requête ne sera exécutée qu'une fois que toutes les valeurs des marqueurs auront été attribuées et que la méthode `execute` aura été appelée.
 
-Exemple avec un `SELECT` :
-```php
-<?php
-# index.php
-# inclusion du fichier de configuration
-require_once "config-dev.php";
-# connexion voir à "Connexion à la base de données complète"
-# requête SQL avec un marqueur nommé
-$sql = "SELECT * FROM `users` WHERE `login` = :login";
-$query = $db->prepare($sql);
-// on attribue la valeur du marqueur
-$query->bindValue(':login', 'admin', PDO::PARAM_STR);
-// on exécute la requête
-$query->execute();
-// on récupère le résultat
-$result = $query->fetch(PDO::FETCH_ASSOC);
-// fermeture de la requête
-
-$query->closeCursor();
-// fermeture de la connexion
-$db = null;
-# ...
-```
 ---
 
 [Retour au menu](#menu)
 
 ---
 
-A suivre ...
+###  Méthode `prepare`
+   La méthode prepare() est utilisée pour préparer une requête SQL à l'exécution. Elle analyse la requête et la "prépare" pour une exécution ultérieure avec des données spécifiques. Au lieu d'insérer directement les valeurs dans la requête SQL, vous utilisez des marqueurs (soit des noms, soit des points d'interrogation).
+
+Syntaxe:
+```php
+PDO::prepare(string $query, array $options = []):
+PDOStatement|false
+```
+
+`$query` : La requête SQL à préparer.
+
+`$options` : Un tableau d'options pour personnaliser le comportement de la requête préparée (optionnel).
+
+Exemple avec des `marqueurs nommés` :
+
+```php
+<?php
+$pdo = new PDO(...);
+
+$requete = $pdo->prepare(
+  "SELECT * FROM utilisateurs 
+  WHERE email = :email"
+  );
+// ":email" est un marqueur nommé
+```
+
+Exemple avec des points d'interrogation :
+
+```php
+<?php
+$pdo = new PDO(...);
+
+$requete = $pdo->prepare(
+  "SELECT * FROM utilisateurs 
+  WHERE email = ?"
+  );
+// "?" est un marqueur positionnel
+?>
+```
+
+#### Documentation sur `prepare`
+
+Cette méthode permet de préparer une requête SQL à l'exécution. Elle analyse la requête et la "prépare" pour une exécution ultérieure avec des données spécifiques.
+
+https://www.php.net/manual/fr/pdo.prepare.php
+
+
+
+---
+
+[Retour au menu](#menu)
+
+---
+
+### Méthode `bindParam`
+   La méthode bindParam() lie une variable PHP à un marqueur nommé ou à un point d'interrogation dans la requête préparée. La valeur de la variable est évaluée au moment de l'exécution de la requête. Cela signifie que si vous changez la valeur de la variable après l'appel à bindParam() mais avant l'appel à execute(), la nouvelle valeur sera utilisée.
+
+Syntaxe :
+
+```php
+PDOStatement::bindParam(string|int $param, 
+mixed &$var, int $type = PDO::PARAM_STR, 
+int $maxLength = 0): bool
+```
+
+`$param` : Le nom du paramètre (pour les marqueurs nommés, par exemple : `:nom` ou `:prenom`) ou la position du paramètre (pour les points d'interrogation, en commençant à 1).
+
+`&$var` : Une référence à la variable PHP que vous voulez lier au paramètre. C'est crucial, car bindParam travaille avec la référence, et non avec la valeur directe !
+
+`$type` : Le type de données du paramètre (optionnel). Les constantes PDO::PARAM_* sont utilisées (par exemple, PDO::PARAM_STR, PDO::PARAM_INT, PDO::PARAM_BOOL). Si omis, PDO::PARAM_STR est utilisé par défaut.
+
+`$maxLength` : Une indication de la longueur maximale des données (optionnel).
+
+Exemple avec un marqueur nommé :
+
+```php
+<?php
+$pdo = new PDO(...);
+$requete = $pdo->prepare("
+  SELECT * FROM utilisateurs 
+  WHERE email = :email ;
+  ");
+$email = "test@example.com";
+$requete->bindParam(':email', $email, PDO::PARAM_STR);
+$requete->execute(); // La valeur de $email 
+                     // ("test@example.com") est utilisée ici
+$resultats = $requete->fetchAll();
+$requete->closeCursor();
+$pdo=null;
+?>
+```
+
+Exemple avec un point d'interrogation (attention lecture de gauche à droite en commençant à 1) :
+
+```php
+<?php
+$pdo = new PDO(...);
+$requete = $pdo->prepare("
+  SELECT * 
+  FROM produits 
+  WHERE id = ? AND categorie = ? ;
+  ");
+$id = 123;
+$categorie = "électronique";
+$requete->bindParam(1, $id, PDO::PARAM_INT);
+$requete->bindParam(2, $categorie, PDO::PARAM_STR);
+$requete->execute();
+$resultats = $requete->fetchAll();
+$requete->closeCursor();
+$pdo=null;
+?>
+```
+
+#### Documentation sur `bindParam`
+
+Cette méthode lie une variable PHP à un marqueur nommé ou à un point d'interrogation dans la requête préparée. La valeur de la variable est évaluée au moment de l'exécution de la requête et est liée par référence.
+
+https://www.php.net/manual/fr/pdostatement.bindparam.php
+
+---
+
+[Retour au menu](#menu)
+
+---
+
+
+### Méthode `bindValue`
+   La méthode bindValue() associe une valeur à un marqueur nommé ou à un point d'interrogation dans la requête préparée. Contrairement à bindParam(), la valeur est évaluée au moment de l'appel à bindValue(). Les changements ultérieurs à la variable n'affecteront pas la valeur utilisée dans la requête.
+
+Syntaxe :
+```php
+PDOStatement::bindValue(string|int $param, 
+mixed $value, int $type = PDO::PARAM_STR): bool
+```
+
+`$param` : Le nom du paramètre (pour les marqueurs nommés) ou la position du paramètre (pour les points d'interrogation).
+
+`$value` : La valeur à lier au paramètre. Ici, vous passez directement la valeur, et non une référence à une variable.
+
+`$type` : Le type de données du paramètre (optionnel, utilise les constantes PDO::PARAM_*).
+
+Exemple avec un marqueur nommé :
+
+```php
+<?php
+$pdo = new PDO("...");
+$requete = $pdo->prepare("
+        INSERT INTO articles (titre, contenu) 
+        VALUES (:titre, :contenu);
+        ");
+$requete->bindValue(':titre', "Mon Super Article", PDO::PARAM_STR);
+$contenu = "Ceci est le contenu de mon article.";
+$requete->bindValue(':contenu', $contenu, PDO::PARAM_STR);
+$requete->execute();
+?>
+```
+
+Exemple avec un point d'interrogation :
+
+```php
+<?php
+$pdo = new PDO(...);
+$requete = $pdo->prepare("
+    SELECT * 
+    FROM produits 
+    WHERE prix > ? ;
+    ");
+$prix = 25.00;
+$requete->bindValue(1, $prix, PDO::PARAM_STR); // Note: PDO::PARAM_STR
+// peut fonctionner pour les nombres,
+// mais PDO::PARAM_INT ou PDO::PARAM_FLOAT
+// seraient plus appropriés. ! Pour le
+// LIMIT seul PDO::PARAM_INT est utilisé.
+$requete->execute();
+$resultats = $requete->fetchAll();
+$requete->closeCursor();
+$pdo=null;
+?>
+```
+
+---
+
+[Retour au menu](#menu)
+
+---
+
+
+#### Documentation sur `bindValue`
+
+`PDOStatement::bindValue()` associe une valeur à un paramètre dans une requête préparée.
+
+https://www.php.net/manual/fr/pdostatement.bindvalue.php
+
+
+---
+
+[Retour au menu](#menu)
+
+---
+
+
+
+### Différence Clé entre `bindParam` et `bindValue`
+
+La différence cruciale réside dans le moment où la valeur est évaluée :
+
+`bindParam()` : La valeur de la variable est utilisée au moment de l'appel à execute().
+
+`bindValue()` : La valeur est utilisée au moment de l'appel à bindValue().
+
+Utilisez `bindParam()` si vous avez besoin de modifier la valeur de la variable après la liaison et avant l'exécution de la requête. C'est utile dans les boucles où la valeur change à chaque itération.
+
+```php
+<?php
+$pdo = new PDO(...);
+$requete = $pdo->prepare("
+  SELECT * 
+  FROM produits 
+  WHERE color = ? AND size > ? ;
+  ");
+$color = "blue";
+$size = 5;
+$requete->bindParam(1, $color, PDO::PARAM_STR);
+$requete->bindParam(2, $size, PDO::PARAM_INT);
+
+$requete->execute(); // color = 'blue' & size > 5
+$color = "red";
+$size = 7;
+$requete->execute();// color = 'red' & size > 7
+$color = "green";
+$size = 4;
+$requete->execute();// color = 'green' & size > 4
+```
+
+Utilisez `bindValue()` si la valeur est connue au moment de la liaison et ne changera pas. C'est plus direct et plus simple dans la plupart des cas.
+
+---
+
+[Retour au menu](#menu)
+
+---
+
+### Méthode `execute`
+
+La méthode `execute` permet l'exécution de la requête préparée, on peut aussi l'utiliser en raccourci à la méthode `bindValue` en y passant un tableau indexé contenant les valeurs des marqueurs `?` ou un tableau associatif contenant les valeurs des marqueurs `:nom`.
+
+```php
+<?php
+$pdo = new PDO(...);
+$requete = $pdo->prepare("
+    SELECT * 
+    FROM produits 
+    WHERE prix > ?
+    AND size > ? ;
+    ");
+$requete->execute([25,8]);
+```
+
+Ou plus rarement avec des marqueurs nommés :
+
+```php
+<?php
+$pdo = new PDO(...);
+$requete = $pdo->prepare("
+    SELECT * 
+    FROM produits 
+    WHERE prix > :prix
+    AND size > :size ;
+    ");
+$requete->execute(["prix" => 25,"size" => 8]);
+```
+
+---
+
+[Retour au menu](#menu)
+
+---
+
+#### Documentation sur `execute`
+
+`PDOStatement::execute()` exécute une instruction SQL préparée et retourne le nombre de lignes affectées.
+
+https://www.php.net/manual/fr/pdostatement.execute.php
+
+---
+
+[Retour au menu](#menu)
+
+---
+
 
